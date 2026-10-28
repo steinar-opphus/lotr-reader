@@ -162,7 +162,7 @@ if (typeof document !== 'undefined') (() => {
     bookPage:'Boka',readBook:'Utforsk boka',chapterSummaries:'Kapitteloppsummeringar',bookHelp:'Berre oppsummeringar fram til leseposisjonen vert viste nedanfor.',
     available:'kapittel i denne utgåva',introduction:'Innleiing',noSummary:'Denne kapitteloppsummeringa ventar på ein kjeldeverifisert revisjon.'};
   const t = {...en,...(data.language === 'nn' ? nn : data.language === 'nb' ? nb : {})};
-  if (data.structured_units) Object.assign(t,{book:'Volume',chapter:'Reading unit',chapters:'Chapters',available:'reading units in this edition',bookHelp:'Summaries preserve the prologue and internal Book/chapter labels. Each unit has its own reading gate.'});
+  if (data.structured_units) Object.assign(t,{book:'Volume',chapter:'Reading unit',chapters:'Chapters',available:'reading units in this edition',bookHelp:'Summaries preserve the prologue, internal Book/chapter labels and appendices. Each unit has its own reading gate.'});
   if (data.language === 'nn') Object.assign(t, {
     previous:'Førre',finishBook:'Marker denne boka som lesen',finishAll:'Marker serien som lesen (alt tilgjengeleg innhald)',
     availableOnly:'Berre innhald som finst i denne wikien kan visast.',
@@ -456,12 +456,12 @@ if (typeof document !== 'undefined') (() => {
     const summaries = ReaderRules.summaries(page,cutoff);
     const batches = new Map();
     for (const chapter of summaries) {
-      const batch = data.structured_units ? `${chapter.internal_book || 'Prologue'}|${Math.floor(Math.max(0,chapter.number-1)/5)}` : Math.floor(page.summaries.indexOf(chapter)/5);
+      const batch = chapter.kind === 'appendix' ? 'appendices' : data.structured_units ? `${chapter.internal_book || 'Prologue'}|${Math.floor(Math.max(0,chapter.number-1)/5)}` : Math.floor(page.summaries.indexOf(chapter)/5);
       if (!batches.has(batch)) batches.set(batch,[]);
       batches.get(batch).push(chapter);
     }
     for (const chapters of batches.values()) {
-      const groupLabel = data.structured_units ? (chapters[0].internal_book ? `${chapters[0].internal_book} · ${t.chapters} ${chapters[0].number}–${chapters.at(-1).number}` : 'Prologue') : t.chapters+' '+chapters[0].number+'–'+chapters.at(-1).number;
+      const groupLabel = chapters[0].kind === 'appendix' ? 'Appendices' : data.structured_units ? (chapters[0].internal_book ? `${chapters[0].internal_book} · ${t.chapters} ${chapters[0].number}–${chapters.at(-1).number}` : 'Prologue') : t.chapters+' '+chapters[0].number+'–'+chapters.at(-1).number;
       const section = el('section',{class:'chapter-batch'},el('h2',{},groupLabel));
       for (const chapter of chapters) section.append(el('details',{class:'story-section chapter-summary','data-chapter-id':chapter.id},
         el('summary',{},chapter.heading),el('div',{class:'prose'},chapter.blocks.length?prose(chapter.blocks):el('p',{},t.noSummary))));
